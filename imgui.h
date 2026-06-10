@@ -226,6 +226,7 @@ enum ImGuiDir : int;                // -> enum ImGuiDir              // Enum: A 
 enum ImGuiKey : int;                // -> enum ImGuiKey              // Enum: A key identifier (ImGuiKey_XXX or ImGuiMod_XXX value)
 enum ImGuiMouseSource : int;        // -> enum ImGuiMouseSource      // Enum; A mouse input source identifier (Mouse, TouchScreen, Pen)
 enum ImGuiSortDirection : ImU8;     // -> enum ImGuiSortDirection    // Enum: A sorting direction (ascending or descending)
+enum ImGuiControlButton : ImU8;     // -> enum ImGuiControlButton    // Enum: A control button identifier for window (minimize, maximize, close)
 typedef int ImGuiCol;               // -> enum ImGuiCol_             // Enum: A color identifier for styling
 typedef int ImGuiCond;              // -> enum ImGuiCond_            // Enum: A condition for many Set*() functions
 typedef int ImGuiDataType;          // -> enum ImGuiDataType_        // Enum: A primary data type
@@ -1624,6 +1625,14 @@ enum ImGuiSortDirection : ImU8
     ImGuiSortDirection_Descending   = 2     // Descending = 9->0, Z->A etc.
 };
 
+// A control button type
+enum ImGuiControlButton : ImU8
+{
+    ImGuiControlButton_Minimize = 0,
+    ImGuiControlButton_Maximize = 1,
+    ImGuiControlButton_Close = 2
+};
+
 // A key identifier (ImGuiKey_XXX or ImGuiMod_XXX value): can represent Keyboard, Mouse and Gamepad values.
 // All our named keys are >= 512. Keys value 0 to 511 are left unused and were legacy native/opaque key values (< 1.87).
 // Support for legacy keys was completely removed in 1.91.5.
@@ -2559,8 +2568,8 @@ struct ImGuiIO
     bool        ConfigWindowsMoveFromTitleBarOnly;  // = false      // Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.
     bool        ConfigWindowsCopyContentsWithCtrlC; // = false      // [EXPERIMENTAL] Ctrl+C copy the contents of focused window into the clipboard. Experimental because: (1) has known issues with nested Begin/End pairs (2) text output quality varies (3) text output is in submission order rather than spatial order.
     bool        ConfigScrollbarScrollByPage;    // = true           // Enable scrolling page by page when clicking outside the scrollbar grab. When disabled, always scroll to clicked location. When enabled, Shift+Click scrolls to clicked location.
+    bool        ConfigCustomTitleBar;           // = true           // Have a custom drawn titlebar in place of the default platform one.
     float       ConfigMemoryCompactTimer;       // = 60.0f          // Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1.0f to disable.
-
     // Inputs Behaviors
     // (other variables, ones which are expected to be tweaked within UI code, are exposed in ImGuiStyle)
     float       MouseDoubleClickTime;           // = 0.30f          // Time for a double-click, in seconds.
@@ -4286,7 +4295,9 @@ struct ImGuiPlatformIO
 
     // Platform Backend functions (e.g. Win32, GLFW, SDL) ------------------- Called by -----
     void    (*Platform_CreateWindow)(ImGuiViewport* vp);                    // . . U . .  // Create a new platform window for the given viewport
+    void    (*Platform_PostWindowCreation)(ImGuiViewport* vp);              // . . U . .  // (Optional) Custom callback after a window is created
     void    (*Platform_DestroyWindow)(ImGuiViewport* vp);                   // N . U . D  //
+    void    (*Platform_PreWindowDestruction)(ImGuiViewport* vp);            // N . U . D  // (Optional) Custom callback just before a window is destroyed
     void    (*Platform_ShowWindow)(ImGuiViewport* vp);                      // . . U . .  // Newly created windows are initially hidden so SetWindowPos/Size/Title can be called on them before showing the window
     void    (*Platform_SetWindowPos)(ImGuiViewport* vp, ImVec2 pos);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
     ImVec2  (*Platform_GetWindowPos)(ImGuiViewport* vp);                    // N . . . .  //
