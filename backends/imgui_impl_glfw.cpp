@@ -270,6 +270,8 @@ struct ImGui_ImplGlfw_Data
     GLFWkeyfun              PrevUserCallbackKey;
     GLFWcharfun             PrevUserCallbackChar;
     GLFWmonitorfun          PrevUserCallbackMonitor;
+    GLFWwindowposfun        PrevUserCallbackPos;
+    GLFWwindowsizefun       PrevUserCallbackSize;
 #ifdef _WIN32
     WNDPROC                 PrevWndProc;
 #endif
@@ -660,6 +662,9 @@ static EM_BOOL ImGui_ImplEmscripten_WheelCallback(int, const EmscriptenWheelEven
 static LRESULT CALLBACK ImGui_ImplGlfw_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 #endif
 
+static void ImGui_ImplGlfw_WindowPosCallback(GLFWwindow*, int, int);
+static void ImGui_ImplGlfw_WindowSizeCallback(GLFWwindow*, int, int);
+
 void ImGui_ImplGlfw_InstallCallbacks(GLFWwindow* window)
 {
     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData(window);
@@ -674,6 +679,8 @@ void ImGui_ImplGlfw_InstallCallbacks(GLFWwindow* window)
     bd->PrevUserCallbackKey = glfwSetKeyCallback(window, ImGui_ImplGlfw_KeyCallback);
     bd->PrevUserCallbackChar = glfwSetCharCallback(window, ImGui_ImplGlfw_CharCallback);
     bd->PrevUserCallbackMonitor = glfwSetMonitorCallback(ImGui_ImplGlfw_MonitorCallback);
+    bd->PrevUserCallbackPos = glfwSetWindowPosCallback(window, ImGui_ImplGlfw_WindowPosCallback);
+    bd->PrevUserCallbackSize = glfwSetWindowSizeCallback(window, ImGui_ImplGlfw_WindowSizeCallback);
     bd->InstalledCallbacks = true;
 }
 
