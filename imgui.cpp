@@ -5713,6 +5713,23 @@ static void SetupDrawListSharedData()
     g.DrawListSharedData.InitialFringeScale = 1.0f; // FIXME-DPI: Change this for some DPI scaling experiments.
 }
 
+float ImGui::GetEventWaitingTime()
+{
+    ImGuiContext& g = *GImGui;
+
+    if ((g.IO.ConfigFlags & ImGuiConfigFlags_EnablePowerSavingMode) && g.IO.FrameCountSinceLastInput > 2)
+        return ImMax(0.0f, g.MaxWaitBeforeNextFrame);
+
+    return 0.0f;
+}
+
+void ImGui::SetMaxWaitBeforeNextFrame(float time)
+{
+    ImGuiContext& g = *GImGui;
+
+    g.MaxWaitBeforeNextFrame = ImMin(g.MaxWaitBeforeNextFrame, time);
+}
+
 void ImGui::NewFrame()
 {
     IM_ASSERT(GImGui != NULL && "No current context. Did you call ImGui::CreateContext() and ImGui::SetCurrentContext() ?");
@@ -5739,6 +5756,7 @@ void ImGui::NewFrame()
     g.TooltipOverrideCount = 0;
     g.WindowsActiveCount = 0;
     g.MenusIdSubmittedThisFrame.resize(0);
+    g.MaxWaitBeforeNextFrame = INFINITY;
 
     // Calculate frame-rate for the user, as a purely luxurious feature
     g.FramerateSecPerFrameAccum += g.IO.DeltaTime - g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx];
@@ -6322,6 +6340,7 @@ void ImGui::EndFrame()
     // End frame
     g.WithinFrameScope = false;
     g.FrameCountEnded = g.FrameCount;
+    g.IO.FrameCountSinceLastInput++;
     UpdateFontsEndFrame();
 
     // Initiate moving window + handle left-click and right-click focus
@@ -7173,6 +7192,22 @@ static void CalcResizePosSizeFromAnyCorner(ImGuiWindow* window, const ImVec2& co
     if (corner_norm.y == 0.0f)
         out_pos->y -= (size_constrained.y - size_expected.y);
     *out_size = size_constrained;
+}
+
+static bool ShouldWaitAutoFitFrames()
+{
+    ImGuiContext& g = *GImGui;
+    for (ImGuiWindow* window : g.Windows)
+    {
+        if (!window->Active)
+            continue;
+
+        if (window->AutoFitFramesX > 0 || window->AutoFitFramesY > 0)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 // Data for resizing from resize grip / corner
@@ -16236,8 +16271,8 @@ void ImGui::UpdateSettings()
         g.SettingsLoaded = true;
     }
 
-    // Save settings (with a delay after the last modification, so we don't spam disk too much)
-    if (g.SettingsDirtyTimer > 0.0f)
+    // Wait for the auto fit frames to pass before saving the settings to disk
+    if (g.SettingsDirtyTimer > 0.0f && !ShouldWaitAutoFitFrames())
     {
         g.SettingsDirtyTimer -= g.IO.DeltaTime;
         if (g.SettingsDirtyTimer <= 0.0f)
