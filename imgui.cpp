@@ -1717,7 +1717,7 @@ ImGuiIO::ImGuiIO()
     ConfigWindowsResizeFromEdges = true;
     ConfigWindowsMoveFromTitleBarOnly = false;
     ConfigWindowsCopyContentsWithCtrlC = false;
-    ConfigCustomTitleBar = true;
+    ConfigCustomTitleBar = false;
     ConfigScrollbarScrollByPage = true;
     ConfigMemoryCompactTimer = 60.0f;
     ConfigDebugIsDebuggerPresent = false;
@@ -19746,23 +19746,35 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode* node, ImGuiWindow* host_w
             PushItemFlag(ImGuiItemFlags_Disabled, true);
             PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_Text] * ImVec4(1.0f,1.0f,1.0f,0.4f));
         }
-        auto updateControlButton = [](ImGuiDockNode* node, ImGuiWindow* host_window, ImVec2 pos, ImGuiControlButton buttonType, const char* label)
-            {
-                ImGuiContext& g = *GImGui;
-                bool hovered = false;
-                bool pressed = false;
-                pressed = ControlButton(host_window->GetID(label), pos, buttonType, &hovered);
-                if (hovered || pressed)
+        if (g.IO.ConfigCustomTitleBar)
+        {
+            auto updateControlButton = [](ImGuiDockNode* node, ImGuiWindow* host_window, const char* label, ImVec2 pos, ImGuiControlButton buttonType)
                 {
-                    g.DockContext.Control = buttonType;
-                    g.DockContext.ControlNodeID = node->ID;
-                    g.DockContext.ControlClicked = pressed;
-                    g.DockContext.ControlHovered = hovered;
-                }
-            };
-        updateControlButton(node, host_window, minimize_button_pos, ImGuiControlButton::ImGuiControlButton_Minimize, "#MINIMIZE");
-        updateControlButton(node, host_window, maximize_button_pos, ImGuiControlButton::ImGuiControlButton_Maximize, "#MAXIMIZE");
-        updateControlButton(node, host_window, close_button_pos, ImGuiControlButton::ImGuiControlButton_Close, "#CLOSE");
+                    ImGuiContext& g = *GImGui;
+                    bool hovered = false;
+                    bool pressed = false;
+                    pressed = ControlButton(host_window->GetID(label), pos, buttonType, &hovered);
+                    if (hovered || pressed)
+                    {
+                        g.DockContext.Control = buttonType;
+                        g.DockContext.ControlNodeID = node->ID;
+                        g.DockContext.ControlClicked = pressed;
+                        g.DockContext.ControlHovered = hovered;
+                    }
+                };
+            updateControlButton(node, host_window, "#MINIMIZE", minimize_button_pos, ImGuiControlButton::ImGuiControlButton_Minimize);
+            updateControlButton(node, host_window, "#MAXIMIZE", maximize_button_pos, ImGuiControlButton::ImGuiControlButton_Maximize);
+            updateControlButton(node, host_window, "#CLOSE", close_button_pos, ImGuiControlButton::ImGuiControlButton_Close);
+        }
+        else
+        {
+            if (ControlButton(host_window->GetID("#CLOSE"), close_button_pos, ImGuiControlButton::ImGuiControlButton_Close))
+            {
+                node->WantCloseAll = true;
+                for (int n = 0; n < tab_bar->Tabs.Size; n++)
+                    TabBarCloseTab(tab_bar, &tab_bar->Tabs[n]);
+            }
+        }
 
         //if (IsItemActive())
         //    focus_tab_id = tab_bar->SelectedTabId;
