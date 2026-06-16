@@ -921,6 +921,7 @@ bool ImGui::ControlButton(ImGuiID id, const ImVec2& pos, ImGuiControlButton cont
 
     bool hovered, held;
     bool pressed = ButtonBehavior(bb_interact, id, &hovered, &held);
+    hovered |= bb_interact.ContainsWithPad(g.IO.MousePos, g.Style.TouchExtraPadding);
     if (outHovered)
         *outHovered = hovered;
     if (is_clipped)

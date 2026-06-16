@@ -16678,7 +16678,7 @@ void ImGuiPlatformIO::ClearPlatformHandlers()
     Platform_OpenInShellFn = NULL;
     Platform_SetImeDataFn = NULL;
     Platform_ClipboardUserData = Platform_OpenInShellUserData = Platform_ImeUserData = NULL;
-    Platform_CreateWindow = Platform_DestroyWindow = Platform_ShowWindow = NULL;
+    Platform_CreateWindow = Platform_DestroyWindow = Platform_ShowWindow = Platform_PostWindowCreation = Platform_PreWindowDestruction = NULL;
     Platform_SetWindowPos = Platform_SetWindowSize = NULL;
     Platform_GetWindowPos = Platform_GetWindowSize = Platform_GetWindowFramebufferScale = NULL;
     Platform_SetWindowFocus = NULL;
